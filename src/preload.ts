@@ -101,3 +101,13 @@ export const getCurrentMonthItemStatistics = (args: object) =>{
     ipcRenderer.send('query_item_sales_current_month', args)
   })
 }
+
+
+export const getCurrentMonthOrders = (args: object) =>{
+  return new Promise((resolve) =>{
+    ipcRenderer.on('query_orders_information_reply', (_:any, args: any) =>{
+      resolve(args)
+    })
+    ipcRenderer.send('query_orders_information', args)
+  })
+}

@@ -4,12 +4,11 @@ import ModalCategory from "../components/modal-category.component";
 import { Line } from "react-chartjs-2";
 import {
   Chart,
-  ArcElement,
+  Tooltip,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
-  Legend
 } from "chart.js";
 
 import SearchBar from "../components/search-bar.component";
@@ -18,10 +17,17 @@ import {
   getAllItems,
   getCurrentMonthItemStatistics,
   searchItem,
+  getCategories,
 } from "../preload";
 
 const InventoryPage: React.FC = () => {
-  Chart.register(CategoryScale, LinearScale, PointElement, LineElement,Legend);
+  Chart.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Tooltip
+  );
   //   FLAGS
   const [modalCategoryFlag, setModalCategoryFlag] = useState<boolean>(false);
   const [modalItemFlag, setModalItemFlag] = useState<boolean>(false);
@@ -29,6 +35,8 @@ const InventoryPage: React.FC = () => {
   const [searchInput, setSearchInput] = useState<string>("");
   const [chartDataSet, setChartDataSet] = useState<number[]>([]);
   const [itemDataHistory, setItemDataHistory] = useState<any[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+
   const [items, setItems] = useState<
     {
       itemID: number;
@@ -38,8 +46,17 @@ const InventoryPage: React.FC = () => {
       retailPrice: string;
       barcode: string;
       categoryName: string;
+      categoryID: number;
     }[]
   >([]);
+
+  // Edit input usestates
+  const [inputBarcode, setInputBarcode] = useState<string>("");
+  const [inputItemName, setInputItemName] = useState<string>("");
+  const [inputItemQuantity, setInputItemQuantity] = useState<number>(0);
+  const [inputWholePrice, setInputWholePrice] = useState<string>("");
+  const [inputRetailPrice, setInputRetailPrice] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<number>(2);
 
   const toggleFlag: Function = (
     setter: React.Dispatch<React.SetStateAction<boolean>>
@@ -64,19 +81,44 @@ const InventoryPage: React.FC = () => {
     }
   };
 
-  const handleOnRowClick = async (itemID: number) => {
+  const handleOnRowClick = async (item: {
+    itemID: number;
+    itemName: string;
+    itemQuantity: number;
+    wholePrice: string;
+    retailPrice: string;
+    barcode: string;
+    categoryName: string;
+    categoryID: number;
+  }) => {
+    console.log(item);
     //CLEARS DATA STATES
     setItemDataHistory([]);
     setChartDataSet([]);
     // Loop query item data for each month of the current year
     for (let i = 1; i <= 12; i++) {
       const response: unknown = await getCurrentMonthItemStatistics({
-        itemID: itemID,
+        itemID: item.itemID,
         month: `0${i}`,
       });
       setItemDataHistory((prev) => [...prev, response]);
     }
     console.log(itemDataHistory);
+    setInputBarcode(item.barcode);
+    setInputItemName(item.itemName);
+    setInputItemQuantity(item.itemQuantity);
+    setInputWholePrice(item.wholePrice);
+    setInputRetailPrice(item.retailPrice);
+    setSelectedCategory(item.categoryID);
+  };
+
+  const setEditInputs = () => {};
+
+  const queryCategories = async () => {
+    const response: unknown = await getCategories({});
+    if (response instanceof Array) {
+      setCategoryOptions(response);
+    }
   };
 
   // - - - USEEFFECTS - - -
@@ -84,6 +126,7 @@ const InventoryPage: React.FC = () => {
   useEffect(() => {
     queryItems();
     setInitialLoad(false);
+    queryCategories();
   }, []);
 
   useEffect(() => {
@@ -121,20 +164,37 @@ const InventoryPage: React.FC = () => {
       <div className="h-screen w-full grid grid-cols-[1fr_2fr]">
         {/* left */}
         <div className="left_div border-r-2  border-grey-300 grid grid-rows-[1.6fr_2fr] overflow-hidden">
-          <div className="w-full h-full border-b-2  border-gray-300 ">
+          <div className="w-full h-full border-b-2 border-gray-300 p-4">
             <Line
-              // height={"324px"}
-              width={100}
               options={{
-                maintainAspectRatio: false,
-                scales: {
-                  yAxis: {
-                    // The axis for this scale is determined from the first letter of the id as `'x'`
-                    // It is recommended to specify `position` and / or `axis` explicitly.
-                    suggestedMax: 100,
+                
+                hover: {
+                  mode: "nearest",
+                  intersect: true,
+                },
+                elements: {
+                  line: {
+                    tension: 0.5,
                   },
                 },
+                scales: {
+                  y: {
+                    suggestedMax: 100,
+                    grid: {
+                      drawOnChartArea: true,
+                      drawTicks: false,
+                    },
+                  },
+                  x: {
+                    grid: {
+                      drawOnChartArea: false,
+                      drawTicks: false,
+                    },
+                  },
+                },
+                maintainAspectRatio: false,
               }}
+              datasetIdKey="id"
               data={{
                 labels: [
                   "Jan",
@@ -152,18 +212,12 @@ const InventoryPage: React.FC = () => {
                 ],
                 datasets: [
                   {
-                    label: "# of Sales",
+                    label: "No. of sales",
                     data: chartDataSet,
                     backgroundColor: "white",
                     borderColor: "limegreen",
-                    // backgroundColor: [
-                    //   "rgba(255, 99, 132, 0.2)",
-                    //   "rgba(54, 162, 235, 0.2)",
-                    //   "rgba(255, 206, 86, 0.2)",
-                    //   "rgba(75, 192, 192, 0.2)",
-                    //   "rgba(153, 102, 255, 0.2)",
-                    //   "rgba(255, 159, 64, 0.2)",
-                    // ],
+                    
+                    
                   },
                 ],
               }}
@@ -172,47 +226,61 @@ const InventoryPage: React.FC = () => {
 
           <div className="flex flex-col gap-2 p-4 overflow-y-auto">
             <div className="row ">
-              <p className="text-sm">Barcode</p>
+              <p className="text-sm font-medium">Barcode</p>
               <input
+                value={inputBarcode}
                 type="text"
-                className="w-full border-[1px] border-gray-300"
+                className="w-full px-4 text-sm border-[1px] border-gray-300"
               />
             </div>
             <div className="row ">
-              <p className="text-sm">Item Name</p>
+              <p className="text-sm font-medium">Item Name</p>
               <input
+                value={inputItemName}
                 type="text"
-                className="w-full border-[1px] border-gray-300"
+                className="w-full px-4 text-sm border-[1px] border-gray-300"
               />
             </div>
             <div className="row ">
-              <p className="text-sm">In Stock</p>
+              <p className="text-sm font-medium">In Stock</p>
               <input
+                value={inputItemQuantity}
                 type="text"
-                className="w-full border-[1px] border-gray-300"
+                className="w-full px-4 text-sm border-[1px] border-gray-300"
               />
             </div>
             <div className="row ">
-              <p className="text-sm">Whole Price</p>
+              <p className="text-sm font-medium">Whole Price</p>
               <input
                 type="text"
-                className="w-full border-[1px] border-gray-300"
+                value={inputWholePrice}
+                className="w-full px-4 text-sm border-[1px] border-gray-300"
               />
             </div>
             <div className="row ">
-              <p className="text-sm">Retail Price</p>
+              <p className="text-sm font-medium">Retail Price</p>
               <input
+                value={inputRetailPrice}
                 type="text"
-                className="w-full border-[1px] border-gray-300"
+                className="w-full px-4 text-sm border-[1px] border-gray-300"
               />
             </div>
             <div className="row ">
-              <p className="text-sm">Category</p>
+              <p className="text-sm font-medium">Category</p>
               <select
+                value={selectedCategory}
                 name=""
                 id=""
-                className="w-full border-[1px] border-gray-300"
-              ></select>
+                className="w-full px-4 border-[1px] border-gray-300"
+              >
+                {categoryOptions.map((el: any) => {
+                  return (
+                    <option value={el.categoryID} className="">
+                      {el.categoryName}
+                    </option>
+                  );
+                })}
+              </select>
             </div>
             <div className="buttons flex gap-1 mt-4">
               <button className="bg-[#237AF8] text-white text-sm flex-1">
@@ -225,26 +293,31 @@ const InventoryPage: React.FC = () => {
           </div>
         </div>
         {/* right */}
-        <div className="right_div grid grid-rows-[3rem_1fr]">
-          <div className="flex gap-1 p-2">
-            <SearchBar
-              searchInputSetter={setSearchInput}
-              searchInput={searchInput}
-            />
-            <button
-              onClick={() => toggleFlag(setModalCategoryFlag)}
-              className="w-32 bg-[#237AF8] rounded text-sm text-white"
-            >
-              Add Category
-            </button>
-            <button
-              onClick={() => toggleFlag(setModalItemFlag)}
-              className="w-32 bg-[#237AF8] rounded text-sm text-white"
-            >
-              Add Item
-            </button>
+        <div className="right_div grid grid-rows-[3rem_1fr] gap-4">
+          <div className="flex gap-1 p-2 overflow-hidden">
+            <div className="w-[60%]">
+              <SearchBar
+                searchInputSetter={setSearchInput}
+                searchInput={searchInput}
+              />
+            </div>
+
+            <div className="flex-1 justify-end flex gap-2">
+              <button
+                onClick={() => toggleFlag(setModalCategoryFlag)}
+                className="w-32 bg-white rounded text-sm text-[#237AF8] border-2 border-[#237AF8]"
+              >
+                Add Category
+              </button>
+              <button
+                onClick={() => toggleFlag(setModalItemFlag)}
+                className="w-32 bg-white rounded text-sm text-[#237AF8] border-2 border-[#237AF8]"
+              >
+                Add Item
+              </button>
+            </div>
           </div>
-          <div className="table_div w-full px-2 ">
+          <div className="table_div w-full px-2 overflow-y-auto">
             <table className=" w-full text-sm">
               <colgroup>
                 <col span={1} className="w-[30%]" />
@@ -256,7 +329,7 @@ const InventoryPage: React.FC = () => {
               </colgroup>
 
               <thead className="h-7">
-                <tr className="bg-[#237AF8] text-white">
+                <tr className="bg-[#237AF8] text-white h-10">
                   <th className=" text-left px-4 ">Item Name</th>
                   <th className=" text-left ">In Stock</th>
                   <th className=" text-left ">Whole Price</th>
@@ -271,8 +344,8 @@ const InventoryPage: React.FC = () => {
                   if (index % 2) {
                     return (
                       <tr
-                        onClick={() => handleOnRowClick(item.itemID)}
-                        className="cursor-pointer h-7 bg-slate-200"
+                        onClick={() => handleOnRowClick(item)}
+                        className="cursor-pointer h-10 bg-gray-100"
                         key={item.itemID}
                       >
                         <td className="px-4">{item.itemName}</td>
@@ -290,8 +363,8 @@ const InventoryPage: React.FC = () => {
                   } else {
                     return (
                       <tr
-                        onClick={() => handleOnRowClick(item.itemID)}
-                        className="cursor-pointer h-7"
+                        onClick={() => handleOnRowClick(item)}
+                        className="cursor-pointer h-10"
                         key={item.itemID}
                       >
                         <td className="px-4">{item.itemName}</td>

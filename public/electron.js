@@ -21,8 +21,8 @@ const db = new sqlite3.Database(
 // Initializing the Electron Window
 const createWindow = () => {
   mainWindow = new BrowserWindow({
-    width: 600, // width of window
-    height: 600, // height of window
+    width: 1280, // width of window
+    height: 720, // height of window
     webPreferences: {
       // IMPORTANT!!!! COMMENTED OUT PRELOADS. UNCOMMENT IF ISSUES ARISE
       // IMPORTANT! - IMPORTRANT! - IMPORTANT! - IMPORTANT!
@@ -141,11 +141,13 @@ process.on("uncaughtException", (error) => {
 // - - - - Add Orders
 
 ipcMain.on("query_addOrder", (event, args) => {
-  const { orderData } = args;
+  const { orderData, totalProfit, totalRevenue } = args;
 
-  const totalAmount = orderData
-    .map((el) => el.retailPrice * el.quantity)
-    .reduce((prev, curr) => prev + curr, 0); //gets total price of the order
+  console.log(args)
+
+  // const totalAmount = orderData
+  //   .map((el) => el.retailPrice * el.quantity)
+  //   .reduce((prev, curr) => prev + curr, 0); //gets total price of the order
 
   let today = new Date();
   const dd = String(today.getDate()).padStart(2, "0");
@@ -172,9 +174,8 @@ ipcMain.on("query_addOrder", (event, args) => {
     });
   };
 
-  const query = `INSERT INTO tblOrders (transactionDate,cashierName,cashierNumber,transactionLocation,transactionTime,totalAmount) VALUES ('${today}', "Andrew", 1, "Palompon",'${time}','${String(
-    totalAmount
-  )}')`;
+  const query = `INSERT INTO tblOrders (transactionDate,cashierName,cashierNumber,transactionLocation,transactionTime,totalAmount, profit) VALUES ('${today}', "Andrew", 1, "Palompon",'${time}','${String(
+    totalRevenue)}','${String(totalProfit)}')`;
   db.run(query, function (err) {
     //Must use old school function instead of lamda function to acces this.lastID
     handleItems(this.lastID);
@@ -247,7 +248,7 @@ ipcMain.on("query_allCategories", (event, args) => {
 //  --- Query Items in specific Category
 ipcMain.on("query_itemsInCategory", (event, args) => {
   const { categoryID } = args;
-  const query = `SELECT itemID, itemName, itemQuantity, retailPrice FROM tblItems WHERE categoryID = ?`;
+  const query = `SELECT itemID, itemName, itemQuantity, retailPrice, wholePrice FROM tblItems WHERE categoryID = ?`;
 
   db.all(query, [categoryID], (err, rows) => {
     event.reply("query_itemsInCategory_reply", err || rows);
@@ -256,7 +257,7 @@ ipcMain.on("query_itemsInCategory", (event, args) => {
 
 // --- Query All Items
 ipcMain.on("query_allItems", (event, args) => {
-  const query = `SELECT i.itemID, i.itemName, i.itemQuantity, i.wholePrice, i.retailPrice, i.barcode, c.categoryName 
+  const query = `SELECT i.itemID, i.itemName, i.itemQuantity, i.wholePrice, i.retailPrice, i.barcode, c.categoryName, c.categoryID 
   FROM tblItems i 
   INNER JOIN tblCategory c 
   ON i.categoryID = c.categoryID`;
@@ -266,7 +267,24 @@ ipcMain.on("query_allItems", (event, args) => {
   });
 });
 
-// --- Search for items using wildcard
+// --- Query order informations by month ---
+ipcMain.on("query_orders_information", (event, args) => {
+  let d = new Date();
+  let month = (d.getMonth() + 1);
+  let year = d.getFullYear();
+
+
+  const query = `
+  SELECT orderID, transactionDate, transactionTime, totalAmount, profit 
+  FROM tblOrders 
+  WHERE transactionDate LIKE '0${month}%${year}'`;
+
+  db.all(query, (err,rows) =>{
+    event.reply('query_orders_information_reply', err||rows);
+  })
+});
+
+// --- Query items using wildcard ---
 ipcMain.on("search_items", (event, args) => {
   const { name } = args;
   const query = `SELECT i.itemID, i.itemName, i.itemQuantity, i.wholePrice, i.retailPrice, i.barcode, c.categoryName 
@@ -287,25 +305,6 @@ ipcMain.on("query_item_sales_current_month", (event, args) => {
   let d = new Date();
   let curYear = d.getFullYear();
 
-
-  // for (let i = 1; i <= 12; i++) {
-  //   const query = `SELECT d.quantityOfOrdered, o.transactionTime, i.itemName, i.wholePrice, i.retailPrice, i.itemQuantity 
-  //   FROM tblOrderDetails d
-  //   INNER JOIN tblOrders o ON d.orderID = o.orderID
-  //   INNER JOIN tblItems i ON d.itemID = i.itemID
-  //   WHERE d.itemID = ? AND o.transactionDate LIKE '05%2022' 
-  //     `;
-  //   db.all(query, [itemID], (err, rows) => {
-  //     tempArray.push(rows)
-  //     // console.log(rows)
-  //   });
-  //   if(i===12){
-  //     console.log(tempArray)
-  //   }
-  // }
-
-  
-
   const query = `SELECT d.quantityOfOrdered, o.transactionDate, o.transactionTime, i.itemName, i.wholePrice, i.retailPrice, i.itemQuantity
   FROM tblOrderDetails d
   INNER JOIN tblOrders o ON d.orderID = o.orderID
@@ -315,7 +314,7 @@ ipcMain.on("query_item_sales_current_month", (event, args) => {
   //REPLACE WITH CURRENT MONTH AND YEAR PRAGMATICALLY
 
   db.all(query, [itemID], (err, rows) => {
-    console.log(rows)
+    console.log(rows);
     event.reply("query_item_sales_current_month_reply", err || rows);
   });
 });

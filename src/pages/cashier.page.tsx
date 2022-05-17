@@ -13,7 +13,9 @@ const Cashier: React.FC = () => {
   const [Categories, setCategories] = useState<object[]>([]);
   const [Items, setItems] = useState<object[]>([]);
   const [orderedItems, setOrderedItems] = useState<any[]>([]);
-  const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [totalRevenue, setTotalRevenue] = useState<number>(0);
+  const [totalWholePrice, setTotalWholePrice] = useState<number>(0);
+  const [totalProfit, setTotalProfit] = useState<number>(0);
   const [transactionData, setTransactionData] = useState<object>();
   const [receiptFlag, setReceiptFlag] = useState<boolean>(false);
 
@@ -30,7 +32,8 @@ const Cashier: React.FC = () => {
   };
 
   const addToOrder = (itemData: any) => {
-    getTotalAmount("add", itemData.retailPrice);
+    getTotalRevenue("add", itemData.retailPrice);
+    getTotalWholePrice("add", itemData.wholePrice)
 
     const nIndex = checkIfExists(orderedItems, itemData);
     if (nIndex !== -1) {
@@ -50,12 +53,12 @@ const Cashier: React.FC = () => {
   const resetCashier = () => {
     setOrderedItems([]);
     setItems([]);
-    setTotalPrice(0);
+    setTotalRevenue(0);
     setReceiptFlag(false);
   };
 
   const processOrder = async () => {
-    const response: any = await addOrderToDB({ orderData: orderedItems });
+    const response: any = await addOrderToDB({ orderData: orderedItems, totalRevenue: totalRevenue, totalProfit: totalProfit });
 
     if (response.status === "success") {
       //trigger receipt print
@@ -63,8 +66,8 @@ const Cashier: React.FC = () => {
     }
   };
 
-  const readyReceipts = (response: any) => {
-    setTransactionData(response);
+  const readyReceipts = (orderData: any) => {
+    setTransactionData(orderData);
     setReceiptFlag(true);
     //add transaction type, cashier name, cashier machine number, and transaction id
   };
@@ -75,24 +78,37 @@ const Cashier: React.FC = () => {
     );
   };
 
-  const getTotalAmount = (operation: "add", itemPrice: string) => {
+  const getTotalRevenue = (operation: "add", itemPrice: string) => {
     if (operation === "add") {
-      setTotalPrice((prev) => (prev += parseFloat(itemPrice)));
+      setTotalRevenue((prev) => (prev += parseFloat(itemPrice)));
       return;
     }
     //else do subtract logic
   };
 
+  const getTotalWholePrice = (operation: "add"|"sub", itemWholePrice: string) =>{
+    if (operation === "add"){
+      setTotalWholePrice((prev) => (prev+=parseFloat(itemWholePrice)))
+      return;
+    }
+  }
+
+
   useEffect(() => {
     queryCategories();
   }, []);
+
+  // everytime totalRevenue changes it computes for the profit and stores it in totalProfit
+  useEffect(()=>{
+    setTotalProfit(parseFloat((totalRevenue - totalWholePrice).toFixed(2)))
+  },[totalRevenue])
 
   return (
     <div className="cashier h-screen w-full grid grid-cols-[1fr_25rem] ">
       {receiptFlag ? (
         <Receipt
           orderData={orderedItems}
-          totalOrderPrice={totalPrice}
+          totalOrderPrice={totalRevenue}
           transactionData={transactionData}
           resetCashierFunction={resetCashier}
         />
@@ -156,7 +172,7 @@ const Cashier: React.FC = () => {
           onClick={processOrder}
           className="bg-green-400 flex justify-center items-center"
         >
-          <p className="text-white">{toCurrencyString(totalPrice)}</p>
+          <p className="text-white">{toCurrencyString(totalRevenue)}</p>
         </div>
       </div>
     </div>
