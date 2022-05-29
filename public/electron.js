@@ -311,7 +311,6 @@ ipcMain.on("query_item_sales_current_month", (event, args) => {
   INNER JOIN tblItems i ON d.itemID = i.itemID
   WHERE d.itemID = ? AND o.transactionDate LIKE '${month}%${curYear}'
   `;
-  //REPLACE WITH CURRENT MONTH AND YEAR PRAGMATICALLY
 
   db.all(query, [itemID], (err, rows) => {
     console.log(rows);
