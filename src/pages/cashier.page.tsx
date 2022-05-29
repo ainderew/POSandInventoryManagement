@@ -1,5 +1,5 @@
 import CategoryContainer from "../components/category-container.components";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 // COMPONENTS
 import ItemContainer from "../components/item-container.components";
 import SearchBar from "../components/search-bar.component";
@@ -8,18 +8,22 @@ import Receipt from "../components/receipt.component";
 // FUNCTIONS
 import { addOrderToDB, getCategories, getItemsInCategory } from "../preload";
 import { toCurrencyString } from "../scripts/common";
+import ModalEditOrderItem from "../components/modal-editOrderItem";
+import { throws } from "assert";
 
 const Cashier: React.FC = () => {
   const [Categories, setCategories] = useState<object[]>([]);
   const [Items, setItems] = useState<object[]>([]);
+  const [selectedItemIndex, setSelectedItemIndex] = useState<number>(0);
   const [orderedItems, setOrderedItems] = useState<any[]>([]);
   const [totalRevenue, setTotalRevenue] = useState<number>(0);
   const [totalWholePrice, setTotalWholePrice] = useState<number>(0);
   const [totalProfit, setTotalProfit] = useState<number>(0);
   const [transactionData, setTransactionData] = useState<object>();
   const [receiptFlag, setReceiptFlag] = useState<boolean>(false);
+  const [editOrderItemFlag, setEditOrderItemFlag] = useState<boolean>(false);
 
-  const [searchInput, setSearchInput] = useState<string>("")
+  const [searchInput, setSearchInput] = useState<string>("");
 
   const queryCategories = async () => {
     const nCategories: any = await getCategories({});
@@ -32,8 +36,7 @@ const Cashier: React.FC = () => {
   };
 
   const addToOrder = (itemData: any) => {
-    getTotalRevenue("add", itemData.retailPrice);
-    getTotalWholePrice("add", itemData.wholePrice)
+    getTotalWholePrice("add", itemData.wholePrice);
 
     const nIndex = checkIfExists(orderedItems, itemData);
     if (nIndex !== -1) {
@@ -50,6 +53,22 @@ const Cashier: React.FC = () => {
     setOrderedItems(newOrderArray);
   };
 
+  const handleEditOrderedItemSave = (newItemData: any, index: number) => {
+    let temp = [...orderedItems];
+    temp[index] = newItemData;
+
+    setOrderedItems(temp);
+    setEditOrderItemFlag(false);
+  };
+
+  const handleOrderedItemDelete = (indexOfSelectedItem: number) =>{
+    let temp = [...orderedItems]
+    temp.splice(indexOfSelectedItem, 1);
+
+    setOrderedItems(temp);
+    closeModal(setEditOrderItemFlag)
+  }
+
   const resetCashier = () => {
     setOrderedItems([]);
     setItems([]);
@@ -58,7 +77,11 @@ const Cashier: React.FC = () => {
   };
 
   const processOrder = async () => {
-    const response: any = await addOrderToDB({ orderData: orderedItems, totalRevenue: totalRevenue, totalProfit: totalProfit });
+    const response: any = await addOrderToDB({
+      orderData: orderedItems,
+      totalRevenue: totalRevenue,
+      totalProfit: totalProfit,
+    });
 
     if (response.status === "success") {
       //trigger receipt print
@@ -78,30 +101,44 @@ const Cashier: React.FC = () => {
     );
   };
 
-  const getTotalRevenue = (operation: "add", itemPrice: string) => {
-    if (operation === "add") {
-      setTotalRevenue((prev) => (prev += parseFloat(itemPrice)));
-      return;
-    }
-    //else do subtract logic
+  const getTotalRevenue = ():void => {
+   let total = orderedItems.map((el) => (el.retailPrice * el.quantity)).reduce((prev,next) => prev+next,0)
+  //  console.log(total)
+   setTotalRevenue(numberTwoDecimalPlaces(total))
   };
 
-  const getTotalWholePrice = (operation: "add"|"sub", itemWholePrice: string) =>{
-    if (operation === "add"){
-      setTotalWholePrice((prev) => (prev+=parseFloat(itemWholePrice)))
+  const getTotalWholePrice = (
+    operation: "add" | "sub",
+    itemWholePrice: string
+  ) => {
+    if (operation === "add") {
+      setTotalWholePrice((prev) => (prev += parseFloat(itemWholePrice)));
       return;
     }
-  }
+  };
 
+  const numberTwoDecimalPlaces = (value: number): number => {
+    return parseFloat(value.toFixed(2));
+  };
+
+  const closeModal = (setter: React.Dispatch<React.SetStateAction<boolean>>): void =>{
+    setter(false);
+  }
 
   useEffect(() => {
     queryCategories();
   }, []);
 
   // everytime totalRevenue changes it computes for the profit and stores it in totalProfit
-  useEffect(()=>{
-    setTotalProfit(parseFloat((totalRevenue - totalWholePrice).toFixed(2)))
-  },[totalRevenue])
+  useEffect(() => {
+    // setTotalProfit(parseFloat((totalRevenue - totalWholePrice).toFixed(2)))
+    const profit = totalRevenue - totalWholePrice;
+    setTotalProfit(numberTwoDecimalPlaces(profit));
+  }, [totalRevenue]);
+
+  useEffect(() => {
+    getTotalRevenue();
+  }, [orderedItems]);
 
   return (
     <div className="cashier h-screen w-full grid grid-cols-[1fr_25rem] ">
@@ -113,9 +150,23 @@ const Cashier: React.FC = () => {
           resetCashierFunction={resetCashier}
         />
       ) : null}
+
+      {editOrderItemFlag ? (
+        <ModalEditOrderItem
+          passedOrderedItemData={orderedItems[selectedItemIndex]}
+          selectedItemIndex={selectedItemIndex}
+          handleSave = {handleEditOrderedItemSave}
+          handleDelete = {handleOrderedItemDelete}
+          closeModal ={() => closeModal(setEditOrderItemFlag)}
+        />
+      ) : null}
+
       <div className="middle grid grid-rows-[3rem_3rem_1fr] overflow-hidden">
         <div className="border-b-2 border-grey-300 p-2">
-          <SearchBar searchInputSetter={setSearchInput} searchInput ={searchInput} />
+          <SearchBar
+            searchInputSetter={setSearchInput}
+            searchInput={searchInput}
+          />
         </div>
 
         <div className="header-container grid grid-cols-2 border-b-2 border-grey-300 ">
@@ -162,10 +213,16 @@ const Cashier: React.FC = () => {
           <p className="font-light  text-sm">Palompon Leyte</p>
         </div>
         <div className="flex flex-col overflow-y-auto">
-          {orderedItems.map((item: any) => {
-            return <OrderedItemContainer
-            key={item.itemID}
-            orderedItemData={item} />;
+          {orderedItems.map((item: any, index: number) => {
+            return (
+              <OrderedItemContainer
+                key={item.itemID}
+                orderedItemData={item}
+                setterFlag={setEditOrderItemFlag}
+                setterIndex={setSelectedItemIndex}
+                passedIndex={index}
+              />
+            );
           })}
         </div>
         <div
