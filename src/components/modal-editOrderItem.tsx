@@ -39,6 +39,10 @@ const ModalEditOrderItem: React.FC<props> = ({
   //   = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if(handleOrderedQuantityOverload(e)){
+      return;
+    }
+
     setOrderedItemData((prev: any) => ({
       ...prev,
       quantity: parseInt(e.target.value),
@@ -58,6 +62,13 @@ const ModalEditOrderItem: React.FC<props> = ({
 
     handleSave(orderedItemData, selectedItemIndex);
   };
+
+  const handleOrderedQuantityOverload = (currentQuantity: any) =>{
+    if (passedOrderedItemData.itemQuantity< currentQuantity.target.value){
+      return true;
+    }
+    return false;
+  }
 
   return (
     <div className="blur-wrapper bg-[rgba(0,0,0,0.2)] absolute w-screen h-screen left-0 top-0">

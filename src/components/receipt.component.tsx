@@ -18,8 +18,8 @@ const Receipt: React.FC<props> = ({
   resetCashierFunction,
 }) => {
   useEffect(() => {
-    // window.print();
-    // resetCashierFunction();
+    window.print();
+    resetCashierFunction();
   }, []);
 
   const { date, time, transactionID } = transactionData;

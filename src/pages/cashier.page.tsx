@@ -35,22 +35,45 @@ const Cashier: React.FC = () => {
     setItems(nItems);
   };
 
-  const addToOrder = (itemData: any) => {
+  const hasStock = (itemData: any): boolean => {
+    if (itemData.itemQuantity > 0) {
+      return true;
+    }
+    return false;
+  };
+
+  const isQuantityOverload = (index: number = 0): boolean => {
+    if (orderedItems[index].quantity >= orderedItems[index].itemQuantity) {
+      return true;
+    }
+    return false;
+  };
+
+  const addToOrder = (itemData: any): void => {
     getTotalWholePrice("add", itemData.wholePrice);
 
-    const nIndex = checkIfExists(orderedItems, itemData);
+    const nIndex = checkIfExists(itemData);
     if (nIndex !== -1) {
+      // if it exist (returned anything but -1)
+      if (isQuantityOverload(nIndex)) {
+        return;
+      }
       const tempHolder = [...orderedItems];
       tempHolder[nIndex].quantity += 1;
       setOrderedItems(tempHolder);
       return;
     }
-    const itemObj = {
-      ...itemData,
-      quantity: 1,
-    };
-    const newOrderArray: object[] = [...orderedItems, itemObj];
-    setOrderedItems(newOrderArray);
+
+    // if ordered item doesn't exist in the current order list check if it's in stock and instantiate a new item Object
+    if (hasStock(itemData)) {
+      const itemObj = {
+        ...itemData,
+        quantity: 1,
+      };
+      const newOrderArray: object[] = [...orderedItems, itemObj];
+      setOrderedItems(newOrderArray);
+    }
+    return;
   };
 
   const handleEditOrderedItemSave = (newItemData: any, index: number) => {
@@ -61,13 +84,13 @@ const Cashier: React.FC = () => {
     setEditOrderItemFlag(false);
   };
 
-  const handleOrderedItemDelete = (indexOfSelectedItem: number) =>{
-    let temp = [...orderedItems]
+  const handleOrderedItemDelete = (indexOfSelectedItem: number) => {
+    let temp = [...orderedItems];
     temp.splice(indexOfSelectedItem, 1);
 
     setOrderedItems(temp);
-    closeModal(setEditOrderItemFlag)
-  }
+    closeModal(setEditOrderItemFlag);
+  };
 
   const resetCashier = () => {
     setOrderedItems([]);
@@ -95,16 +118,16 @@ const Cashier: React.FC = () => {
     //add transaction type, cashier name, cashier machine number, and transaction id
   };
 
-  const checkIfExists = (orderedItemsArray: object[], newItem: any) => {
-    return orderedItemsArray.findIndex(
-      (el: any) => el.itemID === newItem.itemID
-    );
+  const checkIfExists = (newItem: any) => {
+    return orderedItems.findIndex((el: any) => el.itemID === newItem.itemID);
   };
 
-  const getTotalRevenue = ():void => {
-   let total = orderedItems.map((el) => (el.retailPrice * el.quantity)).reduce((prev,next) => prev+next,0)
-  //  console.log(total)
-   setTotalRevenue(numberTwoDecimalPlaces(total))
+  const getTotalRevenue = (): void => {
+    let total = orderedItems
+      .map((el) => el.retailPrice * el.quantity)
+      .reduce((prev, next) => prev + next, 0);
+    //  console.log(total)
+    setTotalRevenue(numberTwoDecimalPlaces(total));
   };
 
   const getTotalWholePrice = (
@@ -121,9 +144,11 @@ const Cashier: React.FC = () => {
     return parseFloat(value.toFixed(2));
   };
 
-  const closeModal = (setter: React.Dispatch<React.SetStateAction<boolean>>): void =>{
+  const closeModal = (
+    setter: React.Dispatch<React.SetStateAction<boolean>>
+  ): void => {
     setter(false);
-  }
+  };
 
   useEffect(() => {
     queryCategories();
@@ -155,9 +180,9 @@ const Cashier: React.FC = () => {
         <ModalEditOrderItem
           passedOrderedItemData={orderedItems[selectedItemIndex]}
           selectedItemIndex={selectedItemIndex}
-          handleSave = {handleEditOrderedItemSave}
-          handleDelete = {handleOrderedItemDelete}
-          closeModal ={() => closeModal(setEditOrderItemFlag)}
+          handleSave={handleEditOrderedItemSave}
+          handleDelete={handleOrderedItemDelete}
+          closeModal={() => closeModal(setEditOrderItemFlag)}
         />
       ) : null}
 
@@ -198,7 +223,7 @@ const Cashier: React.FC = () => {
                   key={el.itemID}
                   addToOrder={() => addToOrder(el)}
                   name={el.itemName}
-                  quantity={2}
+                  quantity={el.itemQuantity}
                   price={el.retailPrice}
                 />
               );

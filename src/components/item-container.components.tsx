@@ -18,7 +18,7 @@ const ItemContainer: React.FC<props> = ({ name, quantity, price, addToOrder }) =
         <div className="qty flex-grow">
           <p className="text-xs">
             In Stock:{" "}
-            <span style={quantity < 1 ? { color: "red" } : {}} className="">
+            <span style={quantity < 1 ? { color: "red", fontWeight: 700 } : {}} className="">
               {quantity}
             </span>
           </p>
