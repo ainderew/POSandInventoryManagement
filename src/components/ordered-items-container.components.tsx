@@ -1,4 +1,5 @@
 import { toCurrencyString } from "../scripts/common";
+
 interface props {
   orderedItemData: any;
   setterFlag: any;
@@ -12,6 +13,7 @@ const OrderedItemContainer: React.FC<props> = ({
   setterIndex,
   passedIndex,
 }: props) => {
+  
   const totalPrice = orderedItemData.retailPrice * orderedItemData.quantity;
 
   const handleClick = () => {

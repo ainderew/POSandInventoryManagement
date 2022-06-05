@@ -143,11 +143,7 @@ process.on("uncaughtException", (error) => {
 ipcMain.on("query_addOrder", (event, args) => {
   const { orderData, totalProfit, totalRevenue } = args;
 
-  console.log(args)
-
-  // const totalAmount = orderData
-  //   .map((el) => el.retailPrice * el.quantity)
-  //   .reduce((prev, curr) => prev + curr, 0); //gets total price of the order
+  console.log(args);
 
   let today = new Date();
   const dd = String(today.getDate()).padStart(2, "0");
@@ -158,12 +154,26 @@ ipcMain.on("query_addOrder", (event, args) => {
   today = `${mm}/${dd}/${yyyy}`;
   time = `${hh}:${min}`;
 
+  const handleInventory = (itemID, orderedQty) => {
+    const query = `UPDATE tblItems SET itemQuantity = itemQuantity - ? WHERE itemID = ?`;
+    db.run(query, [orderedQty, itemID], (err) => {
+      if (err) {
+        console.log("Inventory Handle Error: " + err);
+        return err;
+      }
+    });
+  };
+
   const handleItems = (orderID) => {
     orderData.map((item) => {
+      const {itemID, retailPrice, quantity} = item;
+
+      handleInventory(itemID, quantity);
+
       const query = `INSERT INTO tblOrderDetails (orderID, itemID, priceWhenOrdered, quantityOfOrdered) VALUES (?,?,?,?)`;
       db.run(
         query,
-        [orderID, item.itemID, item.retailPrice, item.quantity],
+        [orderID, itemID, retailPrice, quantity],
         (err) => {
           if (err) {
             console.log("Item Handle Error: " + err);
@@ -175,10 +185,12 @@ ipcMain.on("query_addOrder", (event, args) => {
   };
 
   const query = `INSERT INTO tblOrders (transactionDate,cashierName,cashierNumber,transactionLocation,transactionTime,totalAmount, profit) VALUES ('${today}', "Andrew", 1, "Palompon",'${time}','${String(
-    totalRevenue)}','${String(totalProfit)}')`;
+    totalRevenue
+  )}','${String(totalProfit)}')`;
   db.run(query, function (err) {
     //Must use old school function instead of lamda function to acces this.lastID
     handleItems(this.lastID);
+
     event.reply(
       "query_addOrder_reply",
       err || {
@@ -248,7 +260,7 @@ ipcMain.on("query_allCategories", (event, args) => {
 //  --- Query Items in specific Category
 ipcMain.on("query_itemsInCategory", (event, args) => {
   const { categoryID } = args;
-  const query = `SELECT itemID, itemName, itemQuantity, retailPrice, wholePrice FROM tblItems WHERE categoryID = ?`;
+  const query = `SELECT itemID, itemName, itemQuantity, retailPrice, wholePrice, barcode FROM tblItems WHERE categoryID = ?`;
 
   db.all(query, [categoryID], (err, rows) => {
     event.reply("query_itemsInCategory_reply", err || rows);
@@ -270,18 +282,17 @@ ipcMain.on("query_allItems", (event, args) => {
 // --- Query order informations by month ---
 ipcMain.on("query_orders_information", (event, args) => {
   let d = new Date();
-  let month = (d.getMonth() + 1);
+  let month = d.getMonth() + 1;
   let year = d.getFullYear();
-
 
   const query = `
   SELECT orderID, transactionDate, transactionTime, totalAmount, profit 
   FROM tblOrders 
   WHERE transactionDate LIKE '0${month}%${year}'`;
 
-  db.all(query, (err,rows) =>{
-    event.reply('query_orders_information_reply', err||rows);
-  })
+  db.all(query, (err, rows) => {
+    event.reply("query_orders_information_reply", err || rows);
+  });
 });
 
 // --- Query items using wildcard ---
