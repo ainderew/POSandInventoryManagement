@@ -22,8 +22,9 @@ const ModalTransactionConfirmation: React.FC<props> = ({
 
   return (
     <div className="w-full h-full absolute left-0 bg-blurredBG flex justify-center items-center">
-      <div className="header bg-white min-w-[25rem] min-h-[2rem] grid grid-rows-[4rem_1fr_3rem]">
-        <div className="flex justify-between items-center px-4 ">
+
+      <div className="bg-white min-w-[25rem] min-h-[2rem] grid grid-rows-[3rem_1fr_3rem]">
+        <div className="header flex justify-between items-center px-4 shadow-md">
           <p className="font-medium text-sm">Verify Transaction</p>
           <p
             onClick={handleCloseModal}
@@ -33,7 +34,7 @@ const ModalTransactionConfirmation: React.FC<props> = ({
           </p>
         </div>
 
-        <div className="body px-8">
+        <div className="body px-8 pt-4">
           <table className="w-full ">
             <tbody>
               <tr className="">

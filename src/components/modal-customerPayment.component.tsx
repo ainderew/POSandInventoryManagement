@@ -45,7 +45,7 @@ const ModalCustomerPayment: React.FC<props> = ({
   return (
     <div className="absolute w-full h-full bg-blurredBG left-0 flex justify-center items-center">
       <div className="modal min-w-[25rem] min-h-[14rem] bg-white grid grid-rows-[3rem_1fr_3rem] rounded-md">
-        <div className="header w-full flex justify-between items-center px-4">
+        <div className="header w-full flex justify-between items-center px-4 shadow-md">
           <p className="font-medium">Customer's Payment</p>
           <p onClick={() => closeModal()} className="font-bold text-gray-400">
             X
