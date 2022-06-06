@@ -9,6 +9,7 @@ interface props {
   totalOrderPrice: number;
   transactionData: object | any;
   resetCashierFunction: Function;
+  customerPayment: string
 }
 
 const Receipt: React.FC<props> = ({
@@ -16,6 +17,7 @@ const Receipt: React.FC<props> = ({
   totalOrderPrice,
   transactionData,
   resetCashierFunction,
+  customerPayment
 }) => {
   useEffect(() => {
     window.print();
@@ -113,11 +115,11 @@ const Receipt: React.FC<props> = ({
         </div>
         <div className="row flex justify-between">
           <p className="text-xs">Cash</p>
-          <p className="text-[.70rem]">{toCurrencyString(10000)}</p>
+          <p className="text-[.70rem]">{toCurrencyString(parseFloat(customerPayment))}</p>
         </div>
         <div className="row flex justify-between">
           <p className="text-xs">Change</p>
-          <p className="text-[.70rem]">{toCurrencyString(1000)}</p>
+          <p className="text-[.70rem]">{toCurrencyString(parseFloat(customerPayment)-totalOrderPrice)}</p>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ module.exports = {
     extend: {
       colors: {
         main: "#0AA1DD",
+        blurredBG: "rgba(0,0,0,0.2)"
       },
     },
   },
