@@ -14,36 +14,33 @@ const ModalCustomerPayment: React.FC<props> = ({
   nextModalFlag,
 }: props) => {
   const [errorFlag, setErrorFlag] = useState<boolean>(false);
+  const [localInputValue, setLocalInputValue] = useState<string>("") //Handle input value baing cleared when closed and not affecting customer payment value
 
   const errorStyle = {
     border: "1px solid red",
   };
 
   const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setCustomerPayment(e.target.value);
+    setLocalInputValue(e.target.value);
     return;
   };
 
   const closeModal = (): void => {
-    setCustomerPayment("");
     setModalFlag(false);
   };
-
-  const softCloseModal = (): void =>{
-    setModalFlag(false);
-  }
 
   const openNextModal = () => {
     nextModalFlag(true);
   };
 
   const handleNext = (): void => {
-    if (customerPayment === "") {
+    if (localInputValue === "") {
       setErrorFlag(true);
       return;
     }
+    setCustomerPayment(localInputValue)
     openNextModal();
-    softCloseModal();
+    closeModal();
   };
   return (
     <div className="absolute w-full h-full bg-blurredBG left-0 flex justify-center items-center">
@@ -57,7 +54,7 @@ const ModalCustomerPayment: React.FC<props> = ({
 
         <div className="body px-4 flex justify-center items-center">
           <input
-            value={customerPayment}
+            value={localInputValue}
             onChange={handleOnChange}
             autoFocus={true}
             type="number"

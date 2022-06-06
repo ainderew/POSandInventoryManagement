@@ -10,6 +10,8 @@ import { addOrderToDB, getCategories, getItemsInCategory } from "../preload";
 import { toCurrencyString } from "../scripts/common";
 import ModalEditOrderItem from "../components/modal-editOrderItem";
 import { throws } from "assert";
+import ModalCustomerPayment from "../components/modal-customerPayment.component";
+import ModalTransactionConfirmation from "../components/modal-transactionConfirmation";
 
 const Cashier: React.FC = () => {
   const [Categories, setCategories] = useState<object[]>([]);
@@ -20,8 +22,15 @@ const Cashier: React.FC = () => {
   const [totalWholePrice, setTotalWholePrice] = useState<number>(0);
   const [totalProfit, setTotalProfit] = useState<number>(0);
   const [transactionData, setTransactionData] = useState<object>();
+  const [customerPayment, setCustomerPayment] = useState<string>("");
+
+  //FLAGS
   const [receiptFlag, setReceiptFlag] = useState<boolean>(false);
   const [editOrderItemFlag, setEditOrderItemFlag] = useState<boolean>(false);
+  const [customerPaymentFlag, setCustomerPaymentFlag] =
+    useState<boolean>(false);
+  const [transactionConfirmationFlag, setTransactionConfirmationFlag] =
+    useState<boolean>(false);
 
   const [searchInput, setSearchInput] = useState<string>("");
 
@@ -99,25 +108,6 @@ const Cashier: React.FC = () => {
     setReceiptFlag(false);
   };
 
-  const processOrder = async () => {
-    const response: any = await addOrderToDB({
-      orderData: orderedItems,
-      totalRevenue: totalRevenue,
-      totalProfit: totalProfit,
-    });
-
-    if (response.status === "success") {
-      //trigger receipt print
-      readyReceipts(response);
-    }
-  };
-
-  const readyReceipts = (orderData: any) => {
-    setTransactionData(orderData);
-    setReceiptFlag(true);
-    //add transaction type, cashier name, cashier machine number, and transaction id
-  };
-
   const checkIfExists = (newItem: any) => {
     return orderedItems.findIndex((el: any) => el.itemID === newItem.itemID);
   };
@@ -150,6 +140,35 @@ const Cashier: React.FC = () => {
     setter(false);
   };
 
+  //FOR TRANSACTION HANDLING
+  const openCustomerPaymentModal = () => {
+    if (orderedItems.length === 0) {
+      return;
+    }
+    setCustomerPaymentFlag(true);
+  };
+
+  const processOrder = async () => {
+    const response: any = await addOrderToDB({
+      orderData: orderedItems,
+      totalRevenue: totalRevenue,
+      totalProfit: totalProfit,
+    });
+
+    if (response.status === "success") {
+      //trigger receipt print
+      readyReceipts(response);
+    }
+  };
+
+  const readyReceipts = (orderData: any) => {
+    setTransactionData(orderData);
+    setReceiptFlag(true);
+    //add transaction type, cashier name, cashier machine number, and transaction id
+  };
+
+  // USEEFFECTS
+
   useEffect(() => {
     queryCategories();
   }, []);
@@ -173,6 +192,7 @@ const Cashier: React.FC = () => {
           totalOrderPrice={totalRevenue}
           transactionData={transactionData}
           resetCashierFunction={resetCashier}
+          customerPayment={customerPayment}
         />
       ) : null}
 
@@ -183,6 +203,24 @@ const Cashier: React.FC = () => {
           handleSave={handleEditOrderedItemSave}
           handleDelete={handleOrderedItemDelete}
           closeModal={() => closeModal(setEditOrderItemFlag)}
+        />
+      ) : null}
+
+      {customerPaymentFlag ? (
+        <ModalCustomerPayment
+          customerPayment={customerPayment}
+          setCustomerPayment={setCustomerPayment}
+          setModalFlag={setCustomerPaymentFlag}
+          nextModalFlag={setTransactionConfirmationFlag}
+        />
+      ) : null}
+
+      {transactionConfirmationFlag ? (
+        <ModalTransactionConfirmation
+          totalAmount={totalRevenue}
+          customerPayment={customerPayment}
+          modalSetter={setTransactionConfirmationFlag}
+          processOrder={processOrder}
         />
       ) : null}
 
@@ -251,7 +289,7 @@ const Cashier: React.FC = () => {
           })}
         </div>
         <div
-          onClick={processOrder}
+          onClick={openCustomerPaymentModal}
           className="bg-green-400 flex justify-center items-center"
         >
           <p className="text-white">{toCurrencyString(totalRevenue)}</p>
