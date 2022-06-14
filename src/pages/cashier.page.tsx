@@ -1,5 +1,5 @@
 import CategoryContainer from "../components/category-container.components";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 // COMPONENTS
 import ItemContainer from "../components/item-container.components";
 import SearchBar from "../components/search-bar.component";
@@ -34,13 +34,6 @@ const Cashier: React.FC = () => {
 
   const [searchInput, setSearchInput] = useState<string>("");
 
-  const bar = useRef<HTMLInputElement>(null);
-  const selectBarcode = () => {
-    if (bar.current) {
-      bar.current.focus();
-      console.log("slkdjf");
-    }
-  };
   const queryCategories = async () => {
     const nCategories: any = await getCategories({});
     setCategories(nCategories);
@@ -192,11 +185,7 @@ const Cashier: React.FC = () => {
   }, [orderedItems]);
 
   return (
-    <div
-      onClick={selectBarcode}
-      className="cashier h-screen w-full grid grid-cols-[1fr_25rem] "
-    >
-      <input ref={bar} type="text" className="absolute top-0 bg-slate-300" />
+    <div className="cashier h-screen w-full grid grid-cols-[1fr_25rem] ">
       {receiptFlag ? (
         <Receipt
           orderData={orderedItems}
