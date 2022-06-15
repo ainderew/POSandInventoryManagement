@@ -241,7 +241,6 @@ const Cashier: React.FC = () => {
         />
       ) : null}
 
-
       <div className="middle grid grid-rows-[3rem_3rem_1fr] overflow-hidden">
         <div className="border-b-2 border-grey-300 p-2">
           <SearchBar

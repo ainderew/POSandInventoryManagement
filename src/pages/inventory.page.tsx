@@ -170,7 +170,6 @@ const InventoryPage: React.FC = () => {
           <div className="w-full h-full border-b-2 border-gray-300 p-4">
             <Line
               options={{
-
                 hover: {
                   mode: "nearest",
                   intersect: true,

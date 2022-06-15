@@ -16,7 +16,6 @@ const { ipcRenderer } = electron;
 //   });
 // }
 
-
 // Adding Items
 export const addItem = (args: object) => {
   return new Promise((resolve) => {
