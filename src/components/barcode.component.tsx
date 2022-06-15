@@ -27,5 +27,6 @@ const BarcodeInput: React.FC<props> = ({ inputRef, addToOrder }: props) => {
             onChange={(e) => setBarcode(e.target.value)}
             type="text" className="absolute top-[-1000rem]" />)
 }
+//
 
 export default BarcodeInput
