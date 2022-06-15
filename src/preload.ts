@@ -38,6 +38,7 @@ export const addCategory = (args: object) => {
   });
 };
 
+// Add order to DB
 export const addOrderToDB = (args: object) => {
   return new Promise((resolve) => {
     ipcRenderer.once("query_addOrder_reply", (_: any, args: any) => {
@@ -102,12 +103,22 @@ export const getCurrentMonthItemStatistics = (args: object) =>{
   })
 }
 
-
+//get all orders for the current month
 export const getCurrentMonthOrders = (args: object) =>{
   return new Promise((resolve) =>{
     ipcRenderer.on('query_orders_information_reply', (_:any, args: any) =>{
       resolve(args)
     })
     ipcRenderer.send('query_orders_information', args)
+  })
+}
+
+//get item through barcode
+export const getItemUsingBarcode = (args:object) =>{
+  return new Promise ((resolve) =>{
+    ipcRenderer.on('query_item_using_barcode_reply', (_:any, args: any) =>{
+      resolve(args)
+    })
+    ipcRenderer.send('query_item_using_barcode', args)
   })
 }

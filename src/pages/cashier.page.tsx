@@ -1,6 +1,6 @@
-import CategoryContainer from "../components/category-container.components";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 // COMPONENTS
+import CategoryContainer from "../components/category-container.components";
 import ItemContainer from "../components/item-container.components";
 import SearchBar from "../components/search-bar.component";
 import OrderedItemContainer from "../components/ordered-items-container.components";
@@ -9,11 +9,16 @@ import Receipt from "../components/receipt.component";
 import { addOrderToDB, getCategories, getItemsInCategory } from "../preload";
 import { toCurrencyString } from "../scripts/common";
 import ModalEditOrderItem from "../components/modal-editOrderItem";
-import { throws } from "assert";
 import ModalCustomerPayment from "../components/modal-customerPayment.component";
 import ModalTransactionConfirmation from "../components/modal-transactionConfirmation";
+import BarcodeInput from "../components/barcode.component";
 
 const Cashier: React.FC = () => {
+  //- - - useRef
+  const ref_barcodeInput = useRef<HTMLInputElement | null>(null)
+
+
+  //- - - USESTATES
   const [Categories, setCategories] = useState<object[]>([]);
   const [Items, setItems] = useState<object[]>([]);
   const [selectedItemIndex, setSelectedItemIndex] = useState<number>(0);
@@ -24,13 +29,11 @@ const Cashier: React.FC = () => {
   const [transactionData, setTransactionData] = useState<object>();
   const [customerPayment, setCustomerPayment] = useState<string>("");
 
-  //FLAGS
+  //- - - FLAGS
   const [receiptFlag, setReceiptFlag] = useState<boolean>(false);
   const [editOrderItemFlag, setEditOrderItemFlag] = useState<boolean>(false);
-  const [customerPaymentFlag, setCustomerPaymentFlag] =
-    useState<boolean>(false);
-  const [transactionConfirmationFlag, setTransactionConfirmationFlag] =
-    useState<boolean>(false);
+  const [customerPaymentFlag, setCustomerPaymentFlag] = useState<boolean>(false);
+  const [transactionConfirmationFlag, setTransactionConfirmationFlag] = useState<boolean>(false);
 
   const [searchInput, setSearchInput] = useState<string>("");
 
@@ -59,6 +62,7 @@ const Cashier: React.FC = () => {
   };
 
   const addToOrder = (itemData: any): void => {
+    console.log(itemData)
     getTotalWholePrice("add", itemData.wholePrice);
 
     const nIndex = checkIfExists(itemData);
@@ -73,7 +77,8 @@ const Cashier: React.FC = () => {
       return;
     }
 
-    // if ordered item doesn't exist in the current order list check if it's in stock and instantiate a new item Object
+    // if ordered item doesn't exist in the-
+    // -current order list check if it's in stock and instantiate a new item Object
     if (hasStock(itemData)) {
       const itemObj = {
         ...itemData,
@@ -167,7 +172,14 @@ const Cashier: React.FC = () => {
     //add transaction type, cashier name, cashier machine number, and transaction id
   };
 
-  // USEEFFECTS
+
+  const focusBarcodeInput = () => {
+    if (ref_barcodeInput) {
+      ref_barcodeInput.current?.focus()
+    }
+  }
+
+  //- - - USEEFFECTS
 
   useEffect(() => {
     queryCategories();
@@ -186,6 +198,11 @@ const Cashier: React.FC = () => {
 
   return (
     <div className="cashier h-screen w-full grid grid-cols-[1fr_25rem] ">
+      <BarcodeInput
+        inputRef={ref_barcodeInput}
+        addToOrder={addToOrder}
+      />
+
       {receiptFlag ? (
         <Receipt
           orderData={orderedItems}
@@ -271,9 +288,12 @@ const Cashier: React.FC = () => {
       </div>
 
       <div className="grid grid-rows-[6rem_1fr_6rem] border-l-2 border-grey-300 overflow-hidden">
-        <div className="flex justify-center items-center flex-col border-b-2 border-grey-400">
+        <div
+          onClick={focusBarcodeInput}
+          className="flex justify-center items-center flex-col border-b-2 border-grey-400 cursor-pointer relative hover:text-main hover:bg-main">
           <p className="font-medium  text-lg">Techpal</p>
           <p className="font-light  text-sm">Palompon Leyte</p>
+          <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white">Scan Barcode</p>
         </div>
         <div className="flex flex-col overflow-y-auto">
           {orderedItems.map((item: any, index: number) => {

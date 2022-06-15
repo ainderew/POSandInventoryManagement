@@ -166,7 +166,7 @@ ipcMain.on("query_addOrder", (event, args) => {
 
   const handleItems = (orderID) => {
     orderData.map((item) => {
-      const {itemID, retailPrice, quantity} = item;
+      const { itemID, retailPrice, quantity } = item;
 
       handleInventory(itemID, quantity);
 
@@ -249,6 +249,8 @@ ipcMain.on("query_addCategory", (event, args) => {
 });
 
 // ================ READ ================
+
+// --- Query all categories
 ipcMain.on("query_allCategories", (event, args) => {
   const query = `SELECT categoryId, categoryName FROM tblCategory`;
 
@@ -295,6 +297,8 @@ ipcMain.on("query_orders_information", (event, args) => {
   });
 });
 
+
+
 // --- Query items using wildcard ---
 ipcMain.on("search_items", (event, args) => {
   const { name } = args;
@@ -328,3 +332,21 @@ ipcMain.on("query_item_sales_current_month", (event, args) => {
     event.reply("query_item_sales_current_month_reply", err || rows);
   });
 });
+
+
+// --- Query items with barcode
+
+ipcMain.on("query_item_using_barcode", (event, args) => {
+  const { barcode } = args;
+
+  const QS = `SELECT 
+                itemID, itemName, itemQuantity, wholePrice, retailPrice, barcode, categoryID 
+              FROM tblItems 
+              WHERE barcode = ?
+  `
+  db.all(QS, [barcode], (err, rows) => {
+    console.log(rows); //delete later
+    event.reply("query_item_using_barcode_reply", err || rows)
+  })
+
+})

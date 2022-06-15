@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+2022/06/14-18:22:10.271 2be0 Reusing MANIFEST D:\Projects\POSandInventoryManagement-master\userdata\Session Storage/MANIFEST-000001
+2022/06/14-18:22:10.271 2be0 Recovering log #4
+2022/06/14-18:22:10.271 2be0 Reusing old log D:\Projects\POSandInventoryManagement-master\userdata\Session Storage/000004.log 
+=======
 2022/06/06-09:09:19.743 33fc Reusing MANIFEST E:\projects\pos-management\userdata\Session Storage/MANIFEST-000001
 2022/06/06-09:09:19.743 33fc Recovering log #4
 2022/06/06-09:09:19.743 33fc Reusing old log E:\projects\pos-management\userdata\Session Storage/000004.log 
+>>>>>>> 123f84c5e2c8068b22a1b4ef430170692850e3bf

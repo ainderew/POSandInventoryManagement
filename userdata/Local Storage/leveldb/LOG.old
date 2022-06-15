@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+2022/06/14-18:22:07.724 15ec Reusing MANIFEST D:\Projects\POSandInventoryManagement-master\userdata\Local Storage\leveldb/MANIFEST-000001
+2022/06/14-18:22:07.725 15ec Recovering log #3
+2022/06/14-18:22:07.725 15ec Reusing old log D:\Projects\POSandInventoryManagement-master\userdata\Local Storage\leveldb/000003.log 
+=======
 2022/06/06-09:09:17.607 33fc Reusing MANIFEST E:\projects\pos-management\userdata\Local Storage\leveldb/MANIFEST-000001
 2022/06/06-09:09:17.608 33fc Recovering log #3
 2022/06/06-09:09:17.608 33fc Reusing old log E:\projects\pos-management\userdata\Local Storage\leveldb/000003.log 
+>>>>>>> 123f84c5e2c8068b22a1b4ef430170692850e3bf

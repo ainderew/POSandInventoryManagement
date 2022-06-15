@@ -28,7 +28,9 @@ const InventoryPage: React.FC = () => {
     LineElement,
     Tooltip
   );
-  //   FLAGS
+
+
+  //- - - useStates
   const [modalCategoryFlag, setModalCategoryFlag] = useState<boolean>(false);
   const [modalItemFlag, setModalItemFlag] = useState<boolean>(false);
   const [initialLoad, setInitialLoad] = useState<boolean>(true);
@@ -104,6 +106,7 @@ const InventoryPage: React.FC = () => {
       setItemDataHistory((prev) => [...prev, response]);
     }
     console.log(itemDataHistory);
+    // initialize inputs on the left column
     setInputBarcode(item.barcode);
     setInputItemName(item.itemName);
     setInputItemQuantity(item.itemQuantity);
@@ -112,7 +115,7 @@ const InventoryPage: React.FC = () => {
     setSelectedCategory(item.categoryID);
   };
 
-  const setEditInputs = () => {};
+  const setEditInputs = () => { };
 
   const queryCategories = async () => {
     const response: unknown = await getCategories({});
@@ -167,7 +170,6 @@ const InventoryPage: React.FC = () => {
           <div className="w-full h-full border-b-2 border-gray-300 p-4">
             <Line
               options={{
-                
                 hover: {
                   mode: "nearest",
                   intersect: true,
@@ -216,8 +218,8 @@ const InventoryPage: React.FC = () => {
                     data: chartDataSet,
                     backgroundColor: "white",
                     borderColor: "limegreen",
-                    
-                    
+
+
                   },
                 ],
               }}
