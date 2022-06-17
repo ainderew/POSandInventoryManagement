@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ModalAddItem from "../components/modal-addItem.component";
 import ModalCategory from "../components/modal-category.component";
 import { Line } from "react-chartjs-2";
@@ -18,7 +18,10 @@ import {
   getCurrentMonthItemStatistics,
   searchItem,
   getCategories,
+  updateItemData,
 } from "../preload";
+import InputRow from "../components/input-bar.component";
+import ModalSuccess from "../components/modal-success.component";
 
 const InventoryPage: React.FC = () => {
   Chart.register(
@@ -29,15 +32,25 @@ const InventoryPage: React.FC = () => {
     Tooltip
   );
 
+  //- - - useRef
+  const itemName_ref = useRef<HTMLInputElement | null>(null)
+  const barcode_ref = useRef<HTMLInputElement | null>(null)
+  const itemQuantity_ref = useRef<HTMLInputElement | null>(null)
+  const retailPrice_ref = useRef<HTMLInputElement | null>(null)
+  const wholePrice_ref = useRef<HTMLInputElement | null>(null)
+
 
   //- - - useStates
   const [modalCategoryFlag, setModalCategoryFlag] = useState<boolean>(false);
   const [modalItemFlag, setModalItemFlag] = useState<boolean>(false);
+  const [modalSuccessFlag, setModalSuccessFlag] = useState<boolean>(false);
   const [initialLoad, setInitialLoad] = useState<boolean>(true);
   const [searchInput, setSearchInput] = useState<string>("");
   const [chartDataSet, setChartDataSet] = useState<number[]>([]);
   const [itemDataHistory, setItemDataHistory] = useState<any[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+
+
 
   const [items, setItems] = useState<
     {
@@ -53,16 +66,17 @@ const InventoryPage: React.FC = () => {
   >([]);
 
   // Edit input usestates
+  const [itemID, setitemID] = useState<number>(0);
   const [inputBarcode, setInputBarcode] = useState<string>("");
   const [inputItemName, setInputItemName] = useState<string>("");
-  const [inputItemQuantity, setInputItemQuantity] = useState<number>(0);
+  const [inputItemQuantity, setInputItemQuantity] = useState<string>("");
   const [inputWholePrice, setInputWholePrice] = useState<string>("");
   const [inputRetailPrice, setInputRetailPrice] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<number>(2);
 
   const toggleFlag: Function = (
     setter: React.Dispatch<React.SetStateAction<boolean>>
-  ) => {
+  ): void => {
     setter((prev) => !prev);
   };
 
@@ -78,10 +92,34 @@ const InventoryPage: React.FC = () => {
   const handleItemSearch = async (seachInputValue: string) => {
     const results: unknown = await searchItem({ name: seachInputValue });
     if (results instanceof Array) {
-      console.log(results);
       setItems(results);
     }
   };
+
+  const clearChart = (): void => {
+    setItemDataHistory([]);
+    setChartDataSet([]);
+  }
+
+  const resetFields = (): void => {
+    setitemID(0)
+    setInputBarcode("");
+    setInputItemName("");
+    setInputItemQuantity("");
+    setInputWholePrice("");
+    setInputRetailPrice("");
+    setSelectedCategory(1);
+
+    if (itemName_ref.current && barcode_ref.current && itemQuantity_ref.current && retailPrice_ref.current && wholePrice_ref.current) {
+      itemName_ref.current.removeAttribute("style")
+      barcode_ref.current.removeAttribute("style")
+      itemQuantity_ref.current.removeAttribute("style")
+      retailPrice_ref.current.removeAttribute("style")
+      wholePrice_ref.current.removeAttribute("style")
+    }
+
+
+  }
 
   const handleOnRowClick = async (item: {
     itemID: number;
@@ -95,8 +133,7 @@ const InventoryPage: React.FC = () => {
   }) => {
     console.log(item);
     //CLEARS DATA STATES
-    setItemDataHistory([]);
-    setChartDataSet([]);
+    clearChart();
     // Loop query item data for each month of the current year
     for (let i = 1; i <= 12; i++) {
       const response: unknown = await getCurrentMonthItemStatistics({
@@ -107,15 +144,88 @@ const InventoryPage: React.FC = () => {
     }
     console.log(itemDataHistory);
     // initialize inputs on the left column
+    setitemID(item.itemID)
     setInputBarcode(item.barcode);
     setInputItemName(item.itemName);
-    setInputItemQuantity(item.itemQuantity);
+    setInputItemQuantity(String(item.itemQuantity));
     setInputWholePrice(item.wholePrice);
     setInputRetailPrice(item.retailPrice);
     setSelectedCategory(item.categoryID);
   };
 
-  const setEditInputs = () => { };
+  const handleSaveChanges = async () => {
+    if (!validateInputFields()) {
+      // alert("No blank fields")
+      return;
+    }
+
+    const newItemData = {
+      itemID: itemID,
+      itemName: inputItemName,
+      barcode: inputBarcode,
+      itemQuantity: inputItemQuantity,
+      wholePrice: inputWholePrice,
+      retailPrice: inputRetailPrice,
+      categoryID: selectedCategory
+    }
+
+    const response: any = await updateItemData(newItemData)
+
+    if (response instanceof Error) {
+      alert(response) // Handle error here
+      return;
+    }
+    // success actions
+    setModalSuccessFlag(true)
+    setTimeout(() => {
+      setModalSuccessFlag(false)
+    }, 1000)
+    clearChart();
+    resetFields();
+    queryItems();
+
+
+  };
+
+  const validateInputFields = (): boolean => {
+
+    if (inputItemName === "") {
+      if (itemName_ref.current) {
+        itemName_ref.current.style.border = "2px solid red"
+      }
+      return false
+    }
+    if (inputBarcode === "") {
+      if (barcode_ref.current) {
+        barcode_ref.current.style.border = "2px solid red"
+      }
+      return false
+    }
+
+    if (inputItemQuantity === "") {
+      if (itemQuantity_ref.current) {
+        itemQuantity_ref.current.style.border = "2px solid red"
+      }
+      return false
+    }
+    if (inputWholePrice === "") {
+      if (wholePrice_ref.current) {
+        wholePrice_ref.current.style.border = "2px solid red"
+      }
+      return false
+    }
+    if (inputRetailPrice === "") {
+      if (retailPrice_ref.current) {
+        retailPrice_ref.current.style.border = "2px solid red"
+      }
+      return false
+    }
+
+
+    return true
+
+
+  }
 
   const queryCategories = async () => {
     const response: unknown = await getCategories({});
@@ -123,6 +233,8 @@ const InventoryPage: React.FC = () => {
       setCategoryOptions(response);
     }
   };
+
+
 
   // - - - USEEFFECTS - - -
 
@@ -164,9 +276,12 @@ const InventoryPage: React.FC = () => {
         />
       ) : null}
 
+      {modalSuccessFlag ? <ModalSuccess setter={setModalSuccessFlag} description="You have successfully changed the item's data" /> : null}
+
+
       <div className="h-screen w-full grid grid-cols-[1fr_2fr]">
         {/* left */}
-        <div className="left_div border-r-2  border-grey-300 grid grid-rows-[1.6fr_2fr] overflow-hidden">
+        <div className="left_div border-r-2  border-grey-300 grid grid-rows-[1.7fr_2fr] overflow-hidden">
           <div className="w-full h-full border-b-2 border-gray-300 p-4">
             <Line
               options={{
@@ -226,54 +341,56 @@ const InventoryPage: React.FC = () => {
             />
           </div>
 
-          <div className="flex flex-col gap-2 p-4 overflow-y-auto">
-            <div className="row ">
-              <p className="text-sm font-medium">Barcode</p>
-              <input
-                value={inputBarcode}
-                type="text"
-                className="w-full px-4 text-sm border-[1px] border-gray-300"
-              />
-            </div>
-            <div className="row ">
-              <p className="text-sm font-medium">Item Name</p>
-              <input
-                value={inputItemName}
-                type="text"
-                className="w-full px-4 text-sm border-[1px] border-gray-300"
-              />
-            </div>
-            <div className="row ">
-              <p className="text-sm font-medium">In Stock</p>
-              <input
-                value={inputItemQuantity}
-                type="text"
-                className="w-full px-4 text-sm border-[1px] border-gray-300"
-              />
-            </div>
-            <div className="row ">
-              <p className="text-sm font-medium">Whole Price</p>
-              <input
-                type="text"
-                value={inputWholePrice}
-                className="w-full px-4 text-sm border-[1px] border-gray-300"
-              />
-            </div>
-            <div className="row ">
-              <p className="text-sm font-medium">Retail Price</p>
-              <input
-                value={inputRetailPrice}
-                type="text"
-                className="w-full px-4 text-sm border-[1px] border-gray-300"
-              />
-            </div>
-            <div className="row ">
+          <div className="flex flex-col justify-between gap-2 p-4 overflow-y-auto">
+
+            <InputRow
+              value={inputBarcode}
+              label="Barcode"
+              type="text"
+              setter={setInputBarcode}
+              ref_input={barcode_ref}
+            />
+
+            <InputRow
+              value={inputItemName}
+              label="Item Name"
+              type="text"
+              setter={setInputItemName}
+              ref_input={itemName_ref}
+            />
+
+            <InputRow
+              value={inputItemQuantity}
+              label="In Stock"
+              type="number"
+              setter={setInputItemQuantity}
+              ref_input={itemQuantity_ref}
+            />
+
+            <InputRow
+              value={inputWholePrice}
+              label="Whole Price"
+              type="text"
+              setter={setInputWholePrice}
+              ref_input={wholePrice_ref}
+            />
+
+            <InputRow
+              value={inputRetailPrice}
+              label="Retail Price"
+              type="text"
+              setter={setInputRetailPrice}
+              ref_input={retailPrice_ref}
+            />
+
+            <div className="row flex flex-col gap-2 h-full">
               <p className="text-sm font-medium">Category</p>
               <select
+                onChange={(e) => setSelectedCategory(parseInt(e.target.value))}
                 value={selectedCategory}
                 name=""
                 id=""
-                className="w-full px-4 border-[1px] border-gray-300"
+                className="w-full px-4 h-full border-[1px] border-gray-300"
               >
                 {categoryOptions.map((el: any) => {
                   return (
@@ -284,8 +401,11 @@ const InventoryPage: React.FC = () => {
                 })}
               </select>
             </div>
-            <div className="buttons flex gap-1 mt-4">
-              <button className="bg-[#237AF8] text-white text-sm flex-1">
+
+            <div className="buttons flex gap-1 mt-2 w-full">
+              <button
+                onClick={() => handleSaveChanges()}
+                className="h-[2rem] 2xl:h-[3rem] bg-[#237AF8] text-white text-sm flex-1 ">
                 Save Changes
               </button>
               <button className="bg-white text-black text-sm border-2 border-gray-500 w-[30%]">

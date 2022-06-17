@@ -71,7 +71,7 @@ const ModalCategory: React.FC<props> = ({ toggleModal, stateSetter }) => {
         );
 
       case 4:
-        return <ModalSuccess />;
+        return <ModalSuccess description="The operation was a success!"/>;
     }
   };
 
