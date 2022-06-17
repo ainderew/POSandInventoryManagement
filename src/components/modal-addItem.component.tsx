@@ -73,7 +73,7 @@ const ModalAddItem: React.FC<itemProps> = ({ toggleModal, stateSetter }) => {
   return (
     <div className="h-full w-full bg-[rgba(0,0,0,.3)]  flex justify-center items-center fixed top-0">
       {successFlag ? (
-        <ModalSuccess />
+        <ModalSuccess setter={setSuccessFlag} description="You have successfully added an item!" />
       ) : (
         <div className="h-auto w-[30vw] p-4 bg-white z-10 rounded-sm flex flex-col gap-2">
           <div className="flex flex-col gap-1">

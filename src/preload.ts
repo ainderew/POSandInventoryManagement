@@ -115,10 +115,22 @@ export const getCurrentMonthOrders = (args: object) =>{
 
 //get item through barcode
 export const getItemUsingBarcode = (args:object) =>{
-  return new Promise ((resolve) =>{
-    ipcRenderer.on('query_item_using_barcode_reply', (_:any, args: any) =>{
+  return new Promise((resolve) =>{
+    ipcRenderer.on('query_item_using_barcode_reply', (_:any, args:any) =>{
       resolve(args)
     })
     ipcRenderer.send('query_item_using_barcode', args)
+  })
+}
+
+
+//update item data
+export const updateItemData = (args:object) =>{
+  console.log("preload update hit")
+  return new Promise((resolve) =>{
+    ipcRenderer.on('update_item_reply', (_:any, args:any) =>{
+      resolve(args)
+    })
+    ipcRenderer.send('update_item', args)
   })
 }

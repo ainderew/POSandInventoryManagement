@@ -1,3 +1,4 @@
+const { Console } = require("console");
 const { app, BrowserWindow, ipcMain } = require("electron"); // electron
 const isDev = require("electron-is-dev"); // To check if electron is in development mode
 const path = require("path");
@@ -328,7 +329,6 @@ ipcMain.on("query_item_sales_current_month", (event, args) => {
   `;
 
   db.all(query, [itemID], (err, rows) => {
-    console.log(rows);
     event.reply("query_item_sales_current_month_reply", err || rows);
   });
 });
@@ -349,4 +349,25 @@ ipcMain.on("query_item_using_barcode", (event, args) => {
     event.reply("query_item_using_barcode_reply", err || rows)
   })
 
+})
+
+
+// ===== UPDATE ======
+
+//--- update items ---
+ipcMain.on("update_item", (event, args) => {
+  const {
+    itemID, barcode, itemName, itemQuantity, wholePrice, retailPrice, categoryID
+  } = args;
+
+  const QS = `UPDATE tblItems 
+              SET barcode = ?, itemName = ?, itemQuantity = ?, wholePrice = ?, retailPrice = ?, categoryID = ?
+              WHERE itemID = ?
+  `
+
+  db.all(QS, [barcode, itemName, itemQuantity, wholePrice, retailPrice, categoryID, itemID], (err, rows) => {
+    
+    // const error = new Error(err)
+    event.reply('update_item_reply', err || rows)
+  })
 })
