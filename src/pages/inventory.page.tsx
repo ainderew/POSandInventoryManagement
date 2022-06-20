@@ -9,6 +9,7 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  Filler,
 } from "chart.js";
 
 import SearchBar from "../components/search-bar.component";
@@ -29,6 +30,7 @@ const InventoryPage: React.FC = () => {
     LinearScale,
     PointElement,
     LineElement,
+    Filler,
     Tooltip
   );
 
@@ -331,6 +333,7 @@ const InventoryPage: React.FC = () => {
                   {
                     label: "No. of sales",
                     data: chartDataSet,
+                    fill: {target: true, above:"rgba(20, 245, 20, 0.2)"},
                     backgroundColor: "white",
                     borderColor: "limegreen",
 

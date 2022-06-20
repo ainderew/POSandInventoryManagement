@@ -8,6 +8,7 @@ import {
   LineElement,
   PointElement,
   Tooltip,
+  Filler
 } from "chart.js";
 import { Bar, Line } from "react-chartjs-2";
 import SearchBar from "../components/search-bar.component";
@@ -22,6 +23,7 @@ const FinancePage: React.FC = () => {
     PointElement,
     BarElement,
     BarController,
+    Filler,
     Tooltip
   );
 
@@ -65,13 +67,32 @@ const FinancePage: React.FC = () => {
     getTotalProfit();
   }, [orders]);
 
-  
+
   return (
-    <div className="h-screen w-full  grid grid-cols-[1fr_2fr] overflow-hidden">
+    <div className="h-screen w-full  grid grid-cols-[0.7fr_2fr] overflow-hidden">
       {/* left */}
-      <div className="left border-r-2 border-gray-300"></div>
+      <div className="left  flex flex-col gap-4 p-8 bg-slate-100">
+        <p className="text-lg font-medium">Profit of transaction</p>
+        <div className="bg-main w-full h-[20%] text-white p-8 rounded-xl flex flex-col justify-between">
+          <div className="flex flex-col gap-2">
+            <p className="font-medium">Transaction 81</p>
+            <p className="">30% profit margin of P18,000.00</p>
+          </div>
+          <p className=" font-bold text-3xl">P12,000.00</p>
+        </div>
+
+        <p className="text-medium font-medium">Transaction Information</p>
+        <div className="bg-white w-full h-[15%] p-8 flex flex-col gap-2 rounded-xl">
+            <p className="font-medium">Employee Name: <span className="text-main">John Doe</span></p>
+            <p className="font-medium">Location | Platoform: <span className="text-main">Palompon Leyte</span></p>
+            <p className="font-medium">Payment: <span className="text-main">Cash</span></p>
+        </div>
+
+        <p className="text-medium font-medium">Order Details</p>
+        
+      </div>
       {/* right */}
-      <div className="right grid grid-rows-[3rem_1fr] px-2 overflow-hidden">
+      <div className="right grid grid-rows-[3rem_1fr] px-4 py-2 overflow-hidden">
         <div className="search_container py-2">
           <SearchBar
             searchInput={inputSearch}
@@ -87,94 +108,101 @@ const FinancePage: React.FC = () => {
               </div>
               <div className="flex-1">
                 <Line
-                  options={{
-                    elements: {
-                      line: {
-                        tension: 0.4,
-                      },
-                    },
-                    maintainAspectRatio: false,
+                  options={
+                    {
+                      backgroundColor: "#237AF8",
 
-                    scales: {
-                      x: {
-                        grid: {
-                          drawOnChartArea: false,
+                      elements: {
 
-                          drawTicks: false,
+                        line: {
+                          tension: 0.5,
                         },
                       },
+                      maintainAspectRatio: false,
 
-                      y: {
-                        grid: {
-                          drawOnChartArea: false,
-                          //   drawTicks: false,
+                      scales: {
+                        x: {
+                          grid: {
+                            drawOnChartArea: false,
+
+                            drawTicks: false,
+                          },
+                        },
+
+                        y: {
+                          grid: {
+                            drawOnChartArea: false,
+                            //   drawTicks: false,
+                          },
                         },
                       },
-                    },
-                  }}
+                    }}
                   data={{
-                    // labels: [
-                    //   "Jan",
-                    //   "Feb",
-                    //   "Mar",
-                    //   "Apr",
-                    //   "May",
-                    //   "Jun",
-                    //   "Jul",
-                    //   "Aug",
-                    //   "Sep",
-                    //   "Oct",
-                    //   "Nov",
-                    //   "Dec",
-                    // ],
+
                     labels: [
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
-                      "i",
+                      "Jan",
+                      "Feb",
+                      "Mar",
+                      "Apr",
+                      "May",
+                      "Jun",
+                      "Jul",
+                      "Aug",
+                      "Sep",
+                      "Oct",
+                      "Nov",
+                      "Dec",
                     ],
+                    // labels: [
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    //   "i",
+                    // ],
                     datasets: [
                       {
                         label: "No. of sales",
-                        // data: [4, 2, 6, 3, 5, 5, 7, 8, 3, 10, 5, 4],
-                        data: [
-                          10, 1, 6, 23, 14, 50, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-                          15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
-                          28, 29, 30, 31,
-                        ],
+                        data: [14, 20, 16, 13, 15, 15, 17, 18, 23, 30, 35, 44],
+                        // data: [
+                        //   10, 1, 6, 23, 14, 50, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+                        //   15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
+                        //   28, 29, 30, 31,
+                        // ],
+                        fill: { target: true, above: "rgba(52, 143, 235, 0.2)" },
                         backgroundColor: "white",
                         borderColor: "#237AF8",
                         pointBorderWidth: 3,
                         pointRadius: 3,
                       },
+
                     ],
                   }}
                 />
@@ -239,7 +267,7 @@ const FinancePage: React.FC = () => {
           </div>
 
           <div className="NUMBERS_CONTAINER border-t-[1px] border-b-[1px] border-gray-200 grid grid-cols-3 p-2">
-            <div className="flex flex-col justify-center px-4">
+            <div className="flex flex-col justify-center px-4 ">
               <p className="text-sm font-medium text-[#237AF8]">
                 Total Revenue
               </p>
